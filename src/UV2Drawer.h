@@ -1,6 +1,7 @@
 #pragma once
 #include <LovyanGFX.hpp>
 #include <queue>
+#include <vector>
 
 struct FaceMark {
     int32_t x;
@@ -8,12 +9,13 @@ struct FaceMark {
 };
 
 struct FaceFrame {
-    int32_t x;
-    int32_t y;
-    int32_t w;
-    int32_t h;
-    FaceMark mark[5];
-    double prob;
+    float x;
+    float y;
+    float w;
+    float h;
+    // FaceMark mark[5];
+    float prob;
+    std::vector<FaceMark> mark;
 };
 
 class UV2Drawer {
@@ -32,7 +34,12 @@ class UV2Drawer {
     static constexpr int PALETTE_BLACK = 1;
     static constexpr int PALETTE_ORANGE = 2;
     static constexpr int PALETTE_GREEN = 3;
-    static constexpr int32_t UV2_WIDTH = 240;
+    static constexpr int PALETTE_WHITE = 4;
+    static constexpr int32_t UV2_WIDTH = 480;
+
+    std::vector<FaceFrame> last_face_frame;
+
+    int32_t convLcdRate(float u) { return (int32_t)(u * zoom); }
 
    public:
     UV2Drawer();

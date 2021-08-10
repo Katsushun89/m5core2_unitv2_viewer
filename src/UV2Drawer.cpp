@@ -26,7 +26,7 @@ void UV2Drawer::setup(void) {
     lcd_width = lcd->width();
     center_px = lcd->width() >> 1;
     center_py = lcd->height() >> 1;
-    // zoom = (float)(std::min(lcd->width(), lcd->height())) / UV2_WIDTH;
+    zoom = (float)(std::min(lcd->width(), lcd->height())) / UV2_WIDTH;
 
     lcd->setPivot(center_px, center_py);
     canvas->setColorDepth(lgfx::palette_4bit);
@@ -42,10 +42,11 @@ void UV2Drawer::setup(void) {
 
     canvas->setPaletteColor(PALETTE_BLACK, lcd->color888(0, 0, 15));
     canvas->setPaletteColor(PALETTE_ORANGE, lcd->color888(255, 81, 0));
-    canvas->setPaletteColor(PALETTE_GREEN, lcd->color888(144, 255, 59));
+    canvas->setPaletteColor(PALETTE_GREEN, lcd->color888(0, 255, 0));
+    canvas->setPaletteColor(PALETTE_WHITE, lcd->color888(255, 255, 255));
 
     lcd->startWrite();
-    // canvas->fillRect(0, 0, lcd->width(), lcd->height(), PALETTE_GREEN);
+    canvas->fillRect(0, 0, lcd->width() / 2, lcd->height() / 2, PALETTE_GREEN);
     // center_button->pushRotateZoom(0, zoom, zoom, transpalette);
     // canvas->pushRotateZoom(0, zoom, zoom, transpalette);
     canvas->pushSprite(0, 0);
@@ -109,4 +110,24 @@ void UV2Drawer::drawCenter(FaceFrame &info, uint32_t decision_time,
     canvas->pushSprite(0, 0);
 }
 #endif
-void UV2Drawer::drawFaceFrame() {}
+void UV2Drawer::drawFaceFrame() {
+    FaceFrame face_frame;
+    while (!last_face_frame.empty()) {
+        face_frame = last_face_frame.back();
+        last_face_frame.pop_back();
+        canvas->fillRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
+                         convLcdRate(face_frame.w), convLcdRate(face_frame.h),
+                         PALETTE_BLACK);
+    }
+
+    while (!event_queue.empty()) {
+        if (popEvent(face_frame)) {
+            canvas->drawRect(convLcdRate(face_frame.x),
+                             convLcdRate(face_frame.y),
+                             convLcdRate(face_frame.w),
+                             convLcdRate(face_frame.h), PALETTE_GREEN);
+            last_face_frame.push_back(face_frame);
+        }
+    }
+    canvas->pushSprite(0, 0);
+}

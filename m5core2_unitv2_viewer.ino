@@ -15,7 +15,7 @@ void setup(void) {
     Serial.begin(115200);
     SerialPortA.begin(115200, SERIAL_8N1, 33, 32);  // connect to UnitV2
 
-    // uv2drawer.setup();
+    uv2drawer.setup();
 
     // updateDrawingCenter();
 }
@@ -41,6 +41,7 @@ void parseReceivedJson() {
 
     Serial.print("fase: ");
     for (JsonObject face_item : doc["face"].as<JsonArray>()) {
+        FaceFrame face_frame;
         double face_item_x = face_item["x"];  // 87.22392273, 298.6412659,
                                               // 405.6531982, 180.1317749
         double face_item_y = face_item["y"];  // 99.36726379, 47.6712265,
@@ -54,38 +55,30 @@ void parseReceivedJson() {
         double face_item_prob = face_item["prob"];  // 0.997230828, 0.992135584,
                                                     // 0.990016222, 0.945436954
 
+        face_frame.x = face_item_x;
+        face_frame.y = face_item_y;
+        face_frame.w = face_item_w;
+        face_frame.h = face_item_h;
+        face_frame.prob = face_item_prob;
         for (JsonObject face_item_mark_item :
              face_item["mark"].as<JsonArray>()) {
             int face_item_mark_item_x =
                 face_item_mark_item["x"];  // 114, 154, 140, 124, 156
             int face_item_mark_item_y =
                 face_item_mark_item["y"];  // 148, 140, 170, 194, 188
+            FaceMark mark = {face_item_mark_item_x, face_item_mark_item_y};
+            face_frame.mark.push_back(mark);
         }
         // Serial.printf("x:%f, y:%f, w:%f, h:%f ", face_item_x, face_item_y,
         //              face_item_w, face_item_h);
+        uv2drawer.pushEvent(face_frame);
     }
 }
 
-#if 0
-bool recvUart(std::string &rs) {
-    int32_t recv_size = SerialPortA.available();
-    if (recv_size > 0) {
-        Serial.printf("recvsize:%d\n", recv_size);
-        for (int i = 0; i < recv_size; i++) {
-            char c = (char)SerialPortA.read();
-            rs += c;
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-#else
 bool recvUart(std::string &rs) {
     uint32_t json_bracket_count = 0;
     int32_t recv_size = SerialPortA.available();
     if (recv_size > 0) {
-        Serial.printf("recvsize:%d\n", recv_size);
         char c;
         for (int i = 0; i < recv_size; i++) {
             c = (char)SerialPortA.read();
@@ -96,11 +89,11 @@ bool recvUart(std::string &rs) {
                 break;
             }
         }
-        // Serial.printf("first_json %s\n", first_json.c_str());
     } else {
         return false;
     }
 
+    // search of end json bracket
     do {
         recv_size = SerialPortA.available();
         int read_cnt = 0;
@@ -113,16 +106,11 @@ bool recvUart(std::string &rs) {
                     json_bracket_count++;
                 else if (recv_char == '}')
                     json_bracket_count--;
-                // Serial.printf("recv_char:%c bracket_count:%d\n", recv_char,
-                //              json_bracket_count);
-                // if (json_bracket_count == 0) break;
             }
-            Serial.printf("recv_size:%d, read_cnt:%d\n", recv_size, read_cnt);
         }
     } while (json_bracket_count != 0);
     return true;
 }
-#endif
 
 void loop(void) {
     if (recvUart(recv_uart_str)) {
@@ -132,4 +120,6 @@ void loop(void) {
         }
         recv_uart_str.clear();
     }
+
+    uv2drawer.drawFaceFrame();
 }
