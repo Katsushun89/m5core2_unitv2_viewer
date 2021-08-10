@@ -39,6 +39,7 @@ class UV2Drawer {
 
     std::vector<FaceFrame> last_face_frame;
 
+    void clearLastFaceFrame();
     int32_t convLcdRate(float u) { return (int32_t)(u * zoom); }
 
    public:
@@ -50,5 +51,5 @@ class UV2Drawer {
     int getLcdWidth(void) { return lcd_width; };
     int getCenterPx(void) { return center_px; };
     int getCenterPy(void) { return center_py; };
-    void drawFaceFrame();
+    void drawFaceFrame(uint32_t millis);
 };

@@ -18,6 +18,8 @@ void setup(void) {
     uv2drawer.setup();
 
     // updateDrawingCenter();
+
+    SerialPortA.flush();
 }
 
 // int parseReceivedJson(uint8_t *payload) {
@@ -121,5 +123,5 @@ void loop(void) {
         recv_uart_str.clear();
     }
 
-    uv2drawer.drawFaceFrame();
+    uv2drawer.drawFaceFrame(millis());
 }

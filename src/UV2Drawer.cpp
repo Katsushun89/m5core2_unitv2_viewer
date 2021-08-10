@@ -52,82 +52,37 @@ void UV2Drawer::setup(void) {
     canvas->pushSprite(0, 0);
 }
 
-#if 0
-void UV2Drawer::drawLRButton(void) {
-    const int inside_x = 30;
-    const int outside_x = 5;
-    const int top_y = (lcd->height() >> 1) - 20;
-    const int mdl_y = (lcd->height() >> 1) - 0;
-    const int btm_y = (lcd->height() >> 1) + 20;
-    canvas->fillTriangle(inside_x, top_y, inside_x, btm_y, outside_x, mdl_y,
-                         PALETTE_ORANGE);  // left
-    canvas->fillTriangle(
-        lcd->width() - inside_x, top_y, lcd->width() - inside_x, btm_y,
-        lcd->width() - outside_x, mdl_y, PALETTE_ORANGE);  // right
-}
-
-void UV2Drawer::drawCenterBase(void) {
-    auto transpalette = 0;
-    center_base->fillRect(0, 0, center_button_width, center_button_width,
-                          PALETTE_BLACK);
-    center_base->pushRotateZoom(0, zoom, zoom, transpalette);
-}
-
-void UV2Drawer::drawCenterOFF(String current_switch_str) {
-    Serial.println("drawCenterOff\n");
-    int center = center_button_width >> 1;
-    center_button->fillCircle(center, center, center - 1, 1);
-    center_button->drawCircle(center, center, center - 2 - RING_OUTSIDE_WIDTH,
-                              PALETTE_ORANGE);
-    center_button->drawCircle(center, center, center - 2 - RING_TOTAL_WIDTH,
-                              PALETTE_ORANGE);
-    for (int i = 0; i < RING_INSIDE_DIV; i++) {
-        center_button->fillArc(center, center, center - 2 - RING_OUTSIDE_WIDTH,
-                               center - 2 - RING_TOTAL_WIDTH,
-                               360 / RING_INSIDE_DIV * i,
-                               360 / RING_INSIDE_DIV * i, PALETTE_ORANGE);
-    }
-}
-
-void UV2Drawer::drawCenter(FaceFrame &info, uint32_t decision_time,
-                             String current_switch_str) {
-    if (info.is_in_transition) {
-        if (info.is_switched_on) {
-            drawCenterTransitionOn2Off(info.keep_push_time, decision_time);
-        } else {
-            drawCenterTransitionOff2On(info.keep_push_time, decision_time);
-        }
-    } else {
-        if (info.is_switched_on) {
-            drawCenterON(current_switch_str);
-        } else {
-            drawCenterOFF(current_switch_str);
-        }
-    }
-    drawCenterBase();
-    auto transpalette = 0;
-    center_button->pushRotateZoom(0, zoom, zoom, transpalette);
-    canvas->pushSprite(0, 0);
-}
-#endif
-void UV2Drawer::drawFaceFrame() {
+void UV2Drawer::clearLastFaceFrame() {
     FaceFrame face_frame;
     while (!last_face_frame.empty()) {
         face_frame = last_face_frame.back();
         last_face_frame.pop_back();
-        canvas->fillRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
+        canvas->drawRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
                          convLcdRate(face_frame.w), convLcdRate(face_frame.h),
                          PALETTE_BLACK);
     }
+}
+void UV2Drawer::drawFaceFrame(uint32_t millis) {
+    static uint32_t last_draw_time = millis;
+    if (!event_queue.empty()) {
+        FaceFrame face_frame;
+        clearLastFaceFrame();
+        last_draw_time = millis;
 
-    while (!event_queue.empty()) {
-        if (popEvent(face_frame)) {
-            canvas->drawRect(convLcdRate(face_frame.x),
-                             convLcdRate(face_frame.y),
-                             convLcdRate(face_frame.w),
-                             convLcdRate(face_frame.h), PALETTE_GREEN);
-            last_face_frame.push_back(face_frame);
+        while (!event_queue.empty()) {
+            if (popEvent(face_frame)) {
+                canvas->drawRect(convLcdRate(face_frame.x),
+                                 convLcdRate(face_frame.y),
+                                 convLcdRate(face_frame.w),
+                                 convLcdRate(face_frame.h), PALETTE_GREEN);
+                last_face_frame.push_back(face_frame);
+            }
         }
+        canvas->pushSprite(0, 0);
     }
-    canvas->pushSprite(0, 0);
+
+    if (millis - last_draw_time >= 500) {
+        clearLastFaceFrame();
+        canvas->pushSprite(0, 0);
+    }
 }
