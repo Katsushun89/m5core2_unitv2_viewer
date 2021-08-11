@@ -21,10 +21,11 @@ void UV2FuncSwitcher::sendSwitchCommand(std::string func_name,
     if (func_name == "Object Recognition") {
         doc["args"][0] = "yolo_20class";
     } else {
-        // doc["args"][0] = "";
+        doc["args"][0] = "";
     }
-
-    serializeJson(doc, serial);
+    std::string json;
+    serializeJson(doc, json);
+    serial.println(json.c_str());
 }
 
 std::string UV2FuncSwitcher::backSelectedFunc(void) {

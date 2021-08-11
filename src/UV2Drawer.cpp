@@ -49,7 +49,7 @@ void UV2Drawer::setup(void) {
     canvas->setTextFont(4);
     canvas->setTextDatum(lgfx::middle_center);
 
-    canvas->drawRect(100, 100, 120, 120, PALETTE_ORANGE);
+    // canvas->drawRect(100, 100, 120, 120, PALETTE_ORANGE);
 
     lcd->startWrite();
     canvas->pushSprite(0, 0);

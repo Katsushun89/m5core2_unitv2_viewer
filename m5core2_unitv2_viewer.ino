@@ -3,6 +3,7 @@
 #include <WiFi.h>
 
 #include <LovyanGFX.hpp>
+#include <map>
 
 #include "src/UV2Drawer.h"
 #include "src/UV2FuncSwitcher.h"
@@ -12,8 +13,25 @@ UV2FuncSwitcher uv2func_switcher;
 StaticJsonDocument<1536> doc;
 std::string recv_uart_str;
 HardwareSerial SerialPortA(1);
+std::map<std::string, void (*)(void)> parse_funcs;
 
 void setup(void) {
+    parse_funcs["Audio FFT"] = &parseJsonAudioFFT;
+    parse_funcs["Code Detector"] = &parseJsonCodeDetector;
+    parse_funcs["Face Detector"] = &parseJsonFaceDetector;
+    /*
+        "Lane Line Tracker",
+        "Motion Tracker",
+        "Shape Matching",
+        "Camera Stream",
+        "Online Classifier",
+        "Color Tracker",
+        "Face Recognition",
+        "Target Tracker",
+        "Shape Detector",
+        "Object Recognition"
+    */
+
     Serial.begin(115200);
     SerialPortA.begin(115200, SERIAL_8N1, 33, 32);  // connect to UnitV2
 
@@ -38,7 +56,26 @@ bool deserializeReceivedJson(std::string &json_data) {
     return true;
 }
 
-void parseReceivedJson() {
+bool canHandleReceivedJson(std::string rs, std::string &func_name) {
+    // e.g. "running":"Code Detector",
+    size_t pos = rs.find("running\":");
+    if (pos == std::string::npos) return false;
+
+    std::vector<std::string> could_handle_func_names =
+        uv2func_switcher.getFuncNames();
+    for (auto found_name : could_handle_func_names) {
+        pos = rs.find(found_name);
+        if (pos != std::string::npos) {
+            // found
+            func_name = found_name;
+            return true;
+        }
+    }
+}
+
+void parseJsonAudioFFT() {}
+void parseJsonCodeDetector() {}
+void parseJsonFaceDetector() {
     int num = doc["num"];                  // 4
     const char *running = doc["running"];  // "Face Detector"
     Serial.printf("%s:", running);
@@ -79,6 +116,8 @@ void parseReceivedJson() {
     }
 }
 
+void parseReceivedJson(std::string &func_name) { parse_funcs.at(func_name); }
+
 bool recvUart(std::string &rs) {
     uint32_t json_bracket_count = 0;
     int32_t recv_size = SerialPortA.available();
@@ -98,7 +137,16 @@ bool recvUart(std::string &rs) {
     }
 
     // search of end json bracket
+    uint32_t start_recv_time = millis();
+
     do {
+        if (millis() - start_recv_time >= 100) {
+            Serial.println("received data corruption");
+            SerialPortA.flush();
+            recv_uart_str.clear();
+            break;
+        }
+
         recv_size = SerialPortA.available();
         int read_cnt = 0;
         if (recv_size > 0) {
@@ -112,6 +160,7 @@ bool recvUart(std::string &rs) {
                     json_bracket_count--;
             }
         }
+
     } while (json_bracket_count != 0);
     return true;
 }
@@ -160,23 +209,30 @@ void judgeBottomButtons(TouchPoint_t pos, bool is_touch_pressed,
 }
 
 void loop(void) {
-    static bool is_in_selected_func = false;
+    static bool during_select_func = false;
     // touch panel
     TouchPoint_t pos = M5.Touch.getPressPoint();
     bool is_touch_pressed = false;
     if (M5.Touch.ispressed()) is_touch_pressed = true;
-    judgeBottomButtons(pos, is_touch_pressed, is_in_selected_func);
+    judgeBottomButtons(pos, is_touch_pressed, during_select_func);
 
     // serial communication
     if (recvUart(recv_uart_str)) {
-        Serial.printf("%s", recv_uart_str.c_str());
-        if (deserializeReceivedJson(recv_uart_str)) {
-            parseReceivedJson();
+        /*
+            Serial.printf("%s", recv_uart_str.c_str());
+            std::string func_name;
+            if (canHandleReceivedJson(recv_uart_str, func_name)) {
+                Serial.printf("func:%s\n", func_name.c_str());
+
+                if (deserializeReceivedJson(recv_uart_str)) {
+                    parseReceivedJson(func_name);
+                }
         }
+        */
         recv_uart_str.clear();
     }
 
-    if (!is_in_selected_func) {
+    if (!during_select_func) {
         uv2drawer.drawFaceFrame(millis());
     } else {
         uv2drawer.clearEvent();

@@ -20,4 +20,5 @@ class UV2FuncSwitcher {
     std::string nextSelectedFunc(void);
     std::string getCurrentFuncName(void);
     bool switchFunc(HardwareSerial &serial);
+    std::vector<std::string> getFuncNames(void) { return func_names; }
 };
