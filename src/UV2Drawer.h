@@ -36,6 +36,7 @@ class UV2Drawer {
     static constexpr int PALETTE_GREEN = 3;
     static constexpr int PALETTE_WHITE = 4;
     static constexpr int32_t UV2_WIDTH = 480;
+    static constexpr int32_t MARK_DIV_RATE = 10;
 
     std::vector<FaceFrame> last_face_frame;
 
@@ -48,8 +49,10 @@ class UV2Drawer {
     void setup(void);
     void pushEvent(FaceFrame frame);
     bool popEvent(FaceFrame &frame);
+    void clearEvent();
     int getLcdWidth(void) { return lcd_width; };
     int getCenterPx(void) { return center_px; };
     int getCenterPy(void) { return center_py; };
     void drawFaceFrame(uint32_t millis);
+    void drawFuncName(std::string func_name, bool is_dediced = false);
 };

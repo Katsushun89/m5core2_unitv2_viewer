@@ -5,8 +5,10 @@
 #include <LovyanGFX.hpp>
 
 #include "src/UV2Drawer.h"
+#include "src/UV2FuncSwitcher.h"
 
 UV2Drawer uv2drawer;
+UV2FuncSwitcher uv2func_switcher;
 StaticJsonDocument<1536> doc;
 std::string recv_uart_str;
 HardwareSerial SerialPortA(1);
@@ -114,7 +116,58 @@ bool recvUart(std::string &rs) {
     return true;
 }
 
+void judgeBottomButtons(TouchPoint_t pos, bool is_touch_pressed,
+                        bool &is_in_selected) {
+    static bool is_button_pressed = false;
+    if (!is_touch_pressed) is_button_pressed = false;
+
+    static uint32_t last_pressed_time = millis();
+    if (millis() - last_pressed_time <= 200) return;  // dead time
+
+    if (!is_button_pressed) {
+        if (pos.y > 240) {
+            if (pos.x < 120) {  // btnA
+                last_pressed_time = millis();
+
+                is_button_pressed = true;
+                is_in_selected = true;
+                std::string func_name = uv2func_switcher.backSelectedFunc();
+                uv2drawer.drawFuncName(func_name);
+
+                Serial.printf("push L:%s\n", func_name.c_str());
+            } else if (pos.x > 240) {  // btnC
+                last_pressed_time = millis();
+
+                is_button_pressed = true;
+                is_in_selected = true;
+                std::string func_name = uv2func_switcher.nextSelectedFunc();
+                uv2drawer.drawFuncName(func_name);
+
+                Serial.printf("push R:%s\n", func_name.c_str());
+            } else if (pos.x >= 180 && pos.x <= 210) {  // btnB
+                last_pressed_time = millis();
+
+                is_button_pressed = true;
+                is_in_selected = false;
+                std::string func_name = uv2func_switcher.getCurrentFuncName();
+                uv2drawer.drawFuncName(func_name, true);
+                uv2func_switcher.switchFunc(SerialPortA);
+
+                Serial.printf("push Center\n");
+            }
+        }
+    }
+}
+
 void loop(void) {
+    static bool is_in_selected_func = false;
+    // touch panel
+    TouchPoint_t pos = M5.Touch.getPressPoint();
+    bool is_touch_pressed = false;
+    if (M5.Touch.ispressed()) is_touch_pressed = true;
+    judgeBottomButtons(pos, is_touch_pressed, is_in_selected_func);
+
+    // serial communication
     if (recvUart(recv_uart_str)) {
         Serial.printf("%s", recv_uart_str.c_str());
         if (deserializeReceivedJson(recv_uart_str)) {
@@ -123,5 +176,9 @@ void loop(void) {
         recv_uart_str.clear();
     }
 
-    uv2drawer.drawFaceFrame(millis());
+    if (!is_in_selected_func) {
+        uv2drawer.drawFaceFrame(millis());
+    } else {
+        uv2drawer.clearEvent();
+    }
 }
