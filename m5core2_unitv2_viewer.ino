@@ -34,7 +34,11 @@ void setup(void) {
 
     Serial.begin(115200);
     SerialPortA.begin(115200, SERIAL_8N1, 33, 32);  // connect to UnitV2
-
+    const size_t RX_SIZE = 2048;
+    size_t rx_size = SerialPortA.setRxBufferSize(RX_SIZE);
+    if (rx_size != RX_SIZE) {
+        Serial.printf("setRXBufferSize NG %d\n", rx_size);
+    }
     uv2drawer.setup();
 
     // updateDrawingCenter();
@@ -78,9 +82,9 @@ void parseJsonCodeDetector() {}
 void parseJsonFaceDetector() {
     int num = doc["num"];                  // 4
     const char *running = doc["running"];  // "Face Detector"
-    Serial.printf("%s:", running);
+    // Serial.printf("%s:", running);
 
-    Serial.print("fase: ");
+    // Serial.print("fase: ");
     for (JsonObject face_item : doc["face"].as<JsonArray>()) {
         FaceFrame face_frame;
         double face_item_x = face_item["x"];  // 87.22392273, 298.6412659,
@@ -119,50 +123,17 @@ void parseJsonFaceDetector() {
 void parseReceivedJson(std::string &func_name) { parse_funcs.at(func_name); }
 
 bool recvUart(std::string &rs) {
-    uint32_t json_bracket_count = 0;
     int32_t recv_size = SerialPortA.available();
     if (recv_size > 0) {
         char c;
         for (int i = 0; i < recv_size; i++) {
             c = (char)SerialPortA.read();
-
-            if (c == '{') {
-                rs += c;
-                json_bracket_count++;
-                break;
-            }
+            rs += c;
         }
+        return true;
     } else {
         return false;
     }
-
-    // search of end json bracket
-    uint32_t start_recv_time = millis();
-
-    do {
-        if (millis() - start_recv_time >= 100) {
-            Serial.println("received data corruption");
-            SerialPortA.flush();
-            recv_uart_str.clear();
-            break;
-        }
-
-        recv_size = SerialPortA.available();
-        int read_cnt = 0;
-        if (recv_size > 0) {
-            for (int i = 0; i < recv_size; i++) {
-                char recv_char = (char)SerialPortA.read();
-                read_cnt++;
-                rs += recv_char;
-                if (recv_char == '{')
-                    json_bracket_count++;
-                else if (recv_char == '}')
-                    json_bracket_count--;
-            }
-        }
-
-    } while (json_bracket_count != 0);
-    return true;
 }
 
 void judgeBottomButtons(TouchPoint_t pos, bool is_touch_pressed,
@@ -218,18 +189,25 @@ void loop(void) {
 
     // serial communication
     if (recvUart(recv_uart_str)) {
-        /*
+        if (recv_uart_str.find("\n") != std::string::npos) {
             Serial.printf("%s", recv_uart_str.c_str());
+
+            // some process
             std::string func_name;
             if (canHandleReceivedJson(recv_uart_str, func_name)) {
-                Serial.printf("func:%s\n", func_name.c_str());
-
+                // Serial.printf("func:%s\n", func_name.c_str());
                 if (deserializeReceivedJson(recv_uart_str)) {
-                    parseReceivedJson(func_name);
+                    parseJsonFaceDetector();
+                    // parseReceivedJson(func_name);
                 }
+            }
+            recv_uart_str.clear();
         }
-        */
-        recv_uart_str.clear();
+
+        if (recv_uart_str.size() >= 3000) {
+            Serial.println("recv size over");
+            recv_uart_str.clear();
+        }
     }
 
     if (!during_select_func) {
