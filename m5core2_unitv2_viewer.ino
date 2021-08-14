@@ -8,9 +8,10 @@
 #include "src/UV2Drawer.h"
 #include "src/UV2FuncSwitcher.h"
 
+#define JSON_DOC_SIZE 1536
 UV2Drawer uv2drawer;
 UV2FuncSwitcher uv2func_switcher;
-StaticJsonDocument<1536> doc;
+StaticJsonDocument<JSON_DOC_SIZE> doc;
 std::string recv_uart_str;
 HardwareSerial SerialPortA(1);
 std::map<std::string, void (*)(void)> parse_funcs;
@@ -41,8 +42,6 @@ void setup(void) {
     }
     uv2drawer.setup();
 
-    // updateDrawingCenter();
-
     SerialPortA.flush();
 }
 
@@ -61,6 +60,12 @@ bool deserializeReceivedJson(std::string &json_data) {
 }
 
 bool canHandleReceivedJson(std::string rs, std::string &func_name) {
+    // size check
+    if (rs.size() >= JSON_DOC_SIZE) {
+        Serial.println("json size over");
+        false;
+    }
+
     // e.g. "running":"Code Detector",
     size_t pos = rs.find("running\":");
     if (pos == std::string::npos) return false;
@@ -82,9 +87,6 @@ void parseJsonCodeDetector() {}
 void parseJsonFaceDetector() {
     int num = doc["num"];                  // 4
     const char *running = doc["running"];  // "Face Detector"
-    // Serial.printf("%s:", running);
-
-    // Serial.print("fase: ");
     for (JsonObject face_item : doc["face"].as<JsonArray>()) {
         FaceFrame face_frame;
         double face_item_x = face_item["x"];  // 87.22392273, 298.6412659,
@@ -114,13 +116,17 @@ void parseJsonFaceDetector() {
             FaceMark mark = {face_item_mark_item_x, face_item_mark_item_y};
             face_frame.mark.push_back(mark);
         }
-        // Serial.printf("x:%f, y:%f, w:%f, h:%f ", face_item_x, face_item_y,
-        //              face_item_w, face_item_h);
         uv2drawer.pushEvent(face_frame);
     }
 }
 
-void parseReceivedJson(std::string &func_name) { parse_funcs.at(func_name); }
+void parseReceivedJson(std::string &func_name) {
+    if (parse_funcs.count(func_name)) {
+        parse_funcs[func_name]();
+    } else {
+        Serial.println("not found parser");
+    }
+}
 
 bool recvUart(std::string &rs) {
     int32_t recv_size = SerialPortA.available();
@@ -197,8 +203,7 @@ void loop(void) {
             if (canHandleReceivedJson(recv_uart_str, func_name)) {
                 // Serial.printf("func:%s\n", func_name.c_str());
                 if (deserializeReceivedJson(recv_uart_str)) {
-                    parseJsonFaceDetector();
-                    // parseReceivedJson(func_name);
+                    parseReceivedJson(func_name);
                 }
             }
             recv_uart_str.clear();
