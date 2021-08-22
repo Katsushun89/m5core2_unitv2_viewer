@@ -9,11 +9,11 @@ UV2Drawer::UV2Drawer() {
     }
 }
 
-void UV2Drawer::pushEvent(FaceFrame frame) { event_queue.push(frame); }
+void UV2Drawer::pushEvent(std::string event) { event_queue.push(event); }
 
-bool UV2Drawer::popEvent(FaceFrame &frame) {
+bool UV2Drawer::popEvent(std::string &event) {
     if (!event_queue.empty()) {
-        frame = event_queue.front();
+        event = event_queue.front();
         event_queue.pop();
         return true;
     }
@@ -49,58 +49,27 @@ void UV2Drawer::setup(void) {
     canvas->setTextFont(4);
     canvas->setTextDatum(lgfx::middle_center);
 
-    // canvas->drawRect(100, 100, 120, 120, PALETTE_ORANGE);
-
     lcd->startWrite();
     canvas->pushSprite(0, 0);
 }
 
-void UV2Drawer::clearLastFaceFrame() {
-    FaceFrame face_frame;
-    while (!last_face_frame.empty()) {
-        face_frame = last_face_frame.back();
-        last_face_frame.pop_back();
-        canvas->fillRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
-                         convLcdRate(face_frame.w) + 1,
-                         convLcdRate(face_frame.h) + 1, PALETTE_BLACK);
-    }
-}
+void UV2Drawer::clearFullScreen() { canvas->fillScreen(PALETTE_BLACK); }
 
-void UV2Drawer::drawFaceFrame(uint32_t millis) {
-    static uint32_t last_draw_time = millis;
-    if (!event_queue.empty()) {
-        FaceFrame face_frame;
-        clearLastFaceFrame();
-        last_draw_time = millis;
+void UV2Drawer::updateScreen() { canvas->pushSprite(0, 0); }
 
-        while (!event_queue.empty()) {
-            if (popEvent(face_frame)) {
-                canvas->drawRect(convLcdRate(face_frame.x),
-                                 convLcdRate(face_frame.y),
-                                 convLcdRate(face_frame.w),
-                                 convLcdRate(face_frame.h), PALETTE_GREEN);
-                const int32_t MARK_HALF_LEN =
-                    convLcdRate(face_frame.w) / MARK_DIV_RATE;
-                for (auto m : face_frame.mark) {
-                    canvas->drawLine(convLcdRate(m.x) - MARK_HALF_LEN,
-                                     convLcdRate(m.y),
-                                     convLcdRate(m.x) + MARK_HALF_LEN,
-                                     convLcdRate(m.y), PALETTE_ORANGE);
-                    canvas->drawLine(
-                        convLcdRate(m.x), convLcdRate(m.y) - MARK_HALF_LEN,
-                        convLcdRate(m.x), convLcdRate(m.y) + MARK_HALF_LEN,
-                        PALETTE_ORANGE);
-                    face_frame.mark.pop_back();
-                }
-                last_face_frame.push_back(face_frame);
-            }
-        }
-        canvas->pushSprite(0, 0);
-    }
-
-    if (millis - last_draw_time >= 500) {
-        clearLastFaceFrame();
-        canvas->pushSprite(0, 0);
+void UV2Drawer::drawFaceFrame(FaceFrame &face_frame) {
+    canvas->drawRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
+                     convLcdRate(face_frame.w), convLcdRate(face_frame.h),
+                     PALETTE_GREEN);
+    const int32_t MARK_HALF_LEN = convLcdRate(face_frame.w) / MARK_DIV_RATE;
+    for (auto m : face_frame.mark) {
+        canvas->drawLine(convLcdRate(m.x) - MARK_HALF_LEN, convLcdRate(m.y),
+                         convLcdRate(m.x) + MARK_HALF_LEN, convLcdRate(m.y),
+                         PALETTE_ORANGE);
+        canvas->drawLine(convLcdRate(m.x), convLcdRate(m.y) - MARK_HALF_LEN,
+                         convLcdRate(m.x), convLcdRate(m.y) + MARK_HALF_LEN,
+                         PALETTE_ORANGE);
+        face_frame.mark.pop_back();
     }
 }
 

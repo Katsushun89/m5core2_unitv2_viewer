@@ -61,7 +61,7 @@ bool deserializeReceivedJson(std::string &json_data) {
 
 bool canHandleReceivedJson(std::string rs, std::string &func_name) {
     // size check
-    if (rs.size() >= JSON_DOC_SIZE) {
+    if (rs.size() >= JSON_DOC_SIZE / 2) {
         Serial.println("json size over");
         false;
     }
@@ -85,22 +85,18 @@ bool canHandleReceivedJson(std::string rs, std::string &func_name) {
 void parseJsonAudioFFT() {}
 void parseJsonCodeDetector() {}
 void parseJsonFaceDetector() {
-    int num = doc["num"];                  // 4
+    int num = doc["num"];                  // 2
     const char *running = doc["running"];  // "Face Detector"
+
+    uv2drawer.clearFullScreen();
+
     for (JsonObject face_item : doc["face"].as<JsonArray>()) {
         FaceFrame face_frame;
-        double face_item_x = face_item["x"];  // 87.22392273, 298.6412659,
-                                              // 405.6531982, 180.1317749
-        double face_item_y = face_item["y"];  // 99.36726379, 47.6712265,
-                                              // 148.7048798, 63.35846329
-        double face_item_w =
-            face_item["w"];  // 96.59121704, 95.04016113, 81.55065918,
-                             // 82.10971069
-        double face_item_h =
-            face_item["h"];  // 125.2233276,
-                             // 121.9224625, 95.16421509, 94.93948364
-        double face_item_prob = face_item["prob"];  // 0.997230828, 0.992135584,
-                                                    // 0.990016222, 0.945436954
+        double face_item_x = face_item["x"];        // 87.22392273, 298.6412659
+        double face_item_y = face_item["y"];        // 99.36726379, 47.6712265
+        double face_item_w = face_item["w"];        // 96.59121704, 95.04016113
+        double face_item_h = face_item["h"];        // 125.2233276, 121.9224625
+        double face_item_prob = face_item["prob"];  // 0.997230828, 0.992135584
 
         face_frame.x = face_item_x;
         face_frame.y = face_item_y;
@@ -116,8 +112,9 @@ void parseJsonFaceDetector() {
             FaceMark mark = {face_item_mark_item_x, face_item_mark_item_y};
             face_frame.mark.push_back(mark);
         }
-        uv2drawer.pushEvent(face_frame);
+        uv2drawer.drawFaceFrame(face_frame);
     }
+    uv2drawer.updateScreen();
 }
 
 void parseReceivedJson(std::string &func_name) {
@@ -196,16 +193,8 @@ void loop(void) {
     // serial communication
     if (recvUart(recv_uart_str)) {
         if (recv_uart_str.find("\n") != std::string::npos) {
-            Serial.printf("%s", recv_uart_str.c_str());
-
-            // some process
-            std::string func_name;
-            if (canHandleReceivedJson(recv_uart_str, func_name)) {
-                // Serial.printf("func:%s\n", func_name.c_str());
-                if (deserializeReceivedJson(recv_uart_str)) {
-                    parseReceivedJson(func_name);
-                }
-            }
+            // Serial.printf("%s", recv_uart_str.c_str());
+            uv2drawer.pushEvent(recv_uart_str);
             recv_uart_str.clear();
         }
 
@@ -216,7 +205,22 @@ void loop(void) {
     }
 
     if (!during_select_func) {
-        uv2drawer.drawFaceFrame(millis());
+        static uint32_t last_draw_time = millis();
+        std::string event;
+        std::string func_name;
+        if (uv2drawer.popEvent(event)) {
+            if (canHandleReceivedJson(event, func_name)) {
+                // Serial.printf("func:%s\n", func_name.c_str());
+                if (deserializeReceivedJson(event)) {
+                    last_draw_time = millis();
+                    parseReceivedJson(func_name);
+                }
+            }
+        }
+        if (millis() - last_draw_time > 300) {
+            uv2drawer.clearFullScreen();
+            uv2drawer.updateScreen();
+        }
     } else {
         uv2drawer.clearEvent();
     }

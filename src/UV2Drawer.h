@@ -13,17 +13,25 @@ struct FaceFrame {
     float y;
     float w;
     float h;
-    // FaceMark mark[5];
     float prob;
     std::vector<FaceMark> mark;
 };
 
+struct CodeDetector {
+    float x;
+    float y;
+    float w;
+    float h;
+    float prob;
+    std::string type;
+    std::string content;
+};
+
 class UV2Drawer {
    private:
-    std::queue<FaceFrame> event_queue;
+    std::queue<std::string> event_queue;
     LGFX *lcd;
-    LGFX_Sprite *canvas;  //(&lcd);
-    // LGFX_Sprite *center_base;  //(&canvas);
+    LGFX_Sprite *canvas;
 
     int32_t center_px;
     int32_t center_py;
@@ -38,21 +46,20 @@ class UV2Drawer {
     static constexpr int32_t UV2_WIDTH = 480;
     static constexpr int32_t MARK_DIV_RATE = 10;
 
-    std::vector<FaceFrame> last_face_frame;
-
-    void clearLastFaceFrame();
     int32_t convLcdRate(float u) { return (int32_t)(u * zoom); }
 
    public:
     UV2Drawer();
     ~UV2Drawer() = default;
     void setup(void);
-    void pushEvent(FaceFrame frame);
-    bool popEvent(FaceFrame &frame);
+    void pushEvent(std::string event);
+    bool popEvent(std::string &event);
     void clearEvent();
     int getLcdWidth(void) { return lcd_width; };
     int getCenterPx(void) { return center_px; };
     int getCenterPy(void) { return center_py; };
-    void drawFaceFrame(uint32_t millis);
+    void updateScreen();
+    void drawFaceFrame(FaceFrame &face_frame);
     void drawFuncName(std::string func_name, bool is_dediced = false);
+    void clearFullScreen();
 };
