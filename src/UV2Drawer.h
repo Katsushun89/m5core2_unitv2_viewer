@@ -60,6 +60,7 @@ class UV2Drawer {
     int getCenterPy(void) { return center_py; };
     void updateScreen();
     void drawFaceFrame(FaceFrame &face_frame);
+    void drawCodeDetector(CodeDetector &code);
     void drawFuncName(std::string func_name, bool is_dediced = false);
     void clearFullScreen();
 };

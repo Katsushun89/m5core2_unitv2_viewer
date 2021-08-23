@@ -71,10 +71,28 @@ void UV2Drawer::drawFaceFrame(FaceFrame &face_frame) {
                          PALETTE_ORANGE);
         face_frame.mark.pop_back();
     }
+    canvas->setTextSize(0.5);
+    canvas->setCursor(convLcdRate(face_frame.x),
+                      convLcdRate(face_frame.y) - canvas->fontHeight());
+    // canvas->setTextColor(PALETTE_WHITE, PALETTE_GREEN);
+    canvas->setTextColor(PALETTE_GREEN);
+    canvas->printf("%.2f", face_frame.prob);
+}
+
+void UV2Drawer::drawCodeDetector(CodeDetector &code) {
+    canvas->drawRect(convLcdRate(code.x), convLcdRate(code.y),
+                     convLcdRate(code.w), convLcdRate(code.h), PALETTE_GREEN);
+    canvas->setTextSize(0.5);
+    canvas->setCursor(convLcdRate(code.x),
+                      convLcdRate(code.y) - canvas->fontHeight());
+    // canvas->setTextColor(PALETTE_WHITE, PALETTE_GREEN);
+    canvas->setTextColor(PALETTE_GREEN);
+    canvas->printf("%.2f %s", code.prob, code.content.c_str());
 }
 
 void UV2Drawer::drawFuncName(std::string func_name, bool is_dediced) {
     canvas->fillScreen(PALETTE_BLACK);
+    canvas->setTextSize(1);
     // canvas->setTextSize(0.75);
 
     int y = canvas->height() / 2;

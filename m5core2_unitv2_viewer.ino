@@ -83,7 +83,37 @@ bool canHandleReceivedJson(std::string rs, std::string &func_name) {
 }
 
 void parseJsonAudioFFT() {}
-void parseJsonCodeDetector() {}
+void parseJsonCodeDetector() {
+    int num = doc["num"];                  // 2
+    const char *running = doc["running"];  // "Code Detector"
+
+    uv2drawer.clearFullScreen();
+
+    for (JsonObject code_item : doc["code"].as<JsonArray>()) {
+        CodeDetector code;
+
+        double code_item_prob = code_item["prob"];  // 0.986290514, 0.815941155
+        code.prob = code_item_prob;
+        int code_item_x = code_item["x"];  // 318, 344
+        int code_item_y = code_item["y"];  // 337, 129
+        int code_item_w = code_item["w"];  // 64, 51
+        int code_item_h = code_item["h"];  // 67, 61
+        code.x = code_item_x;
+        code.y = code_item_y;
+        code.w = code_item_w;
+        code.h = code_item_h;
+        const char *code_item_type =
+            code_item["type"];  // "QR/DM/Maxi", "QR/DM/Maxi"
+        const char *code_item_content =
+            code_item["content"];  // "https://www.example.com", ...
+        code.type = code_item_type;
+        code.content = code_item_content;
+
+        uv2drawer.drawCodeDetector(code);
+    }
+    uv2drawer.updateScreen();
+}
+
 void parseJsonFaceDetector() {
     int num = doc["num"];                  // 2
     const char *running = doc["running"];  // "Face Detector"
@@ -193,7 +223,7 @@ void loop(void) {
     // serial communication
     if (recvUart(recv_uart_str)) {
         if (recv_uart_str.find("\n") != std::string::npos) {
-            // Serial.printf("%s", recv_uart_str.c_str());
+            Serial.printf("%s", recv_uart_str.c_str());
             uv2drawer.pushEvent(recv_uart_str);
             recv_uart_str.clear();
         }
