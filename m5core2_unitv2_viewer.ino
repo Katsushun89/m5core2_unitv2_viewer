@@ -122,18 +122,18 @@ void parseJsonFaceDetector() {
     uv2drawer.clearFullScreen();
 
     for (JsonObject face_item : doc["face"].as<JsonArray>()) {
-        FaceFrame face_frame;
+        FaceDetector face;
         double face_item_x = face_item["x"];        // 87.22392273, 298.6412659
         double face_item_y = face_item["y"];        // 99.36726379, 47.6712265
         double face_item_w = face_item["w"];        // 96.59121704, 95.04016113
         double face_item_h = face_item["h"];        // 125.2233276, 121.9224625
         double face_item_prob = face_item["prob"];  // 0.997230828, 0.992135584
 
-        face_frame.x = face_item_x;
-        face_frame.y = face_item_y;
-        face_frame.w = face_item_w;
-        face_frame.h = face_item_h;
-        face_frame.prob = face_item_prob;
+        face.x = face_item_x;
+        face.y = face_item_y;
+        face.w = face_item_w;
+        face.h = face_item_h;
+        face.prob = face_item_prob;
         for (JsonObject face_item_mark_item :
              face_item["mark"].as<JsonArray>()) {
             int face_item_mark_item_x =
@@ -141,9 +141,9 @@ void parseJsonFaceDetector() {
             int face_item_mark_item_y =
                 face_item_mark_item["y"];  // 148, 140, 170, 194, 188
             FaceMark mark = {face_item_mark_item_x, face_item_mark_item_y};
-            face_frame.mark.push_back(mark);
+            face.mark.push_back(mark);
         }
-        uv2drawer.drawFaceFrame(face_frame);
+        uv2drawer.drawFaceDetector(face);
     }
     uv2drawer.updateScreen();
 }

@@ -8,7 +8,7 @@ struct FaceMark {
     int32_t y;
 };
 
-struct FaceFrame {
+struct FaceDetector {
     float x;
     float y;
     float w;
@@ -75,7 +75,7 @@ class UV2Drawer {
     int getCenterPx(void) { return center_px; };
     int getCenterPy(void) { return center_py; };
     void updateScreen();
-    void drawFaceFrame(FaceFrame &face_frame);
+    void drawFaceDetector(FaceDetector &face);
     void drawCodeDetector(CodeDetector &code);
     void drawTargetTracker(TargetTracker &tracker);
     void drawObjectRecognition(ObjectRecognition &recog);

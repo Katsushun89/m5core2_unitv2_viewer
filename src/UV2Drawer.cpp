@@ -57,26 +57,25 @@ void UV2Drawer::clearFullScreen() { canvas->fillScreen(PALETTE_BLACK); }
 
 void UV2Drawer::updateScreen() { canvas->pushSprite(0, 0); }
 
-void UV2Drawer::drawFaceFrame(FaceFrame &face_frame) {
-    canvas->drawRect(convLcdRate(face_frame.x), convLcdRate(face_frame.y),
-                     convLcdRate(face_frame.w), convLcdRate(face_frame.h),
-                     PALETTE_GREEN);
-    const int32_t MARK_HALF_LEN = convLcdRate(face_frame.w) / MARK_DIV_RATE;
-    for (auto m : face_frame.mark) {
+void UV2Drawer::drawFaceDetector(FaceDetector &face) {
+    canvas->drawRect(convLcdRate(face.x), convLcdRate(face.y),
+                     convLcdRate(face.w), convLcdRate(face.h), PALETTE_GREEN);
+    const int32_t MARK_HALF_LEN = convLcdRate(face.w) / MARK_DIV_RATE;
+    for (auto m : face.mark) {
         canvas->drawLine(convLcdRate(m.x) - MARK_HALF_LEN, convLcdRate(m.y),
                          convLcdRate(m.x) + MARK_HALF_LEN, convLcdRate(m.y),
                          PALETTE_ORANGE);
         canvas->drawLine(convLcdRate(m.x), convLcdRate(m.y) - MARK_HALF_LEN,
                          convLcdRate(m.x), convLcdRate(m.y) + MARK_HALF_LEN,
                          PALETTE_ORANGE);
-        face_frame.mark.pop_back();
+        face.mark.pop_back();
     }
     canvas->setTextSize(0.5);
-    canvas->setCursor(convLcdRate(face_frame.x),
-                      convLcdRate(face_frame.y) - canvas->fontHeight());
+    canvas->setCursor(convLcdRate(face.x),
+                      convLcdRate(face.y) - canvas->fontHeight());
     // canvas->setTextColor(PALETTE_WHITE, PALETTE_GREEN);
     canvas->setTextColor(PALETTE_GREEN);
-    canvas->printf("%.2f", face_frame.prob);
+    canvas->printf("%.2f", face.prob);
 }
 
 void UV2Drawer::drawCodeDetector(CodeDetector &code) {
