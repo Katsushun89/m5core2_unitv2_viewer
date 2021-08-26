@@ -27,6 +27,13 @@ struct CodeDetector {
     std::string content;
 };
 
+struct TargetTracker {
+    float x;
+    float y;
+    float w;
+    float h;
+};
+
 class UV2Drawer {
    private:
     std::queue<std::string> event_queue;
@@ -61,6 +68,8 @@ class UV2Drawer {
     void updateScreen();
     void drawFaceFrame(FaceFrame &face_frame);
     void drawCodeDetector(CodeDetector &code);
+    void drawTargetTracker(TargetTracker &tracker);
+
     void drawFuncName(std::string func_name, bool is_dediced = false);
     void clearFullScreen();
 };

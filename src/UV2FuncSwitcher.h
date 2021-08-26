@@ -10,7 +10,10 @@ class UV2FuncSwitcher {
     uint32_t func_name_index;
     std::vector<std::string> func_names;
     StaticJsonDocument<96> doc;
+
     void sendSwitchCommand(std::string func_name, HardwareSerial &serial);
+    void sendConfigCommand(std::string func_name, HardwareSerial &serial);
+    void sendTargetTrackerConfig(std::string func_name, HardwareSerial &serial);
 
    public:
     UV2FuncSwitcher();

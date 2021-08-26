@@ -20,6 +20,7 @@ void setup(void) {
     parse_funcs["Audio FFT"] = &parseJsonAudioFFT;
     parse_funcs["Code Detector"] = &parseJsonCodeDetector;
     parse_funcs["Face Detector"] = &parseJsonFaceDetector;
+    parse_funcs["Target Tracker"] = &parseJsonTargetTracker;
     /*
         "Lane Line Tracker",
         "Motion Tracker",
@@ -28,7 +29,6 @@ void setup(void) {
         "Online Classifier",
         "Color Tracker",
         "Face Recognition",
-        "Target Tracker",
         "Shape Detector",
         "Object Recognition"
     */
@@ -144,6 +144,26 @@ void parseJsonFaceDetector() {
         }
         uv2drawer.drawFaceFrame(face_frame);
     }
+    uv2drawer.updateScreen();
+}
+void parseJsonTargetTracker() {
+    const char *running = doc["running"];  // "Face Detector"
+
+    uv2drawer.clearFullScreen();
+
+    TargetTracker tracker;
+
+    double x = doc["x"];  // 140
+    double y = doc["y"];  // 50
+    double w = doc["w"];  // 230
+    double h = doc["h"];  // 200
+
+    tracker.x = x;
+    tracker.y = y;
+    tracker.w = w;
+    tracker.h = h;
+
+    uv2drawer.drawTargetTracker(tracker);
     uv2drawer.updateScreen();
 }
 

@@ -90,10 +90,15 @@ void UV2Drawer::drawCodeDetector(CodeDetector &code) {
     canvas->printf("%.2f %s", code.prob, code.content.c_str());
 }
 
+void UV2Drawer::drawTargetTracker(TargetTracker &tracker) {
+    canvas->drawRect(convLcdRate(tracker.x), convLcdRate(tracker.y),
+                     convLcdRate(tracker.w), convLcdRate(tracker.h),
+                     PALETTE_GREEN);
+}
+
 void UV2Drawer::drawFuncName(std::string func_name, bool is_dediced) {
     canvas->fillScreen(PALETTE_BLACK);
     canvas->setTextSize(1);
-    // canvas->setTextSize(0.75);
 
     int y = canvas->height() / 2;
     int x =

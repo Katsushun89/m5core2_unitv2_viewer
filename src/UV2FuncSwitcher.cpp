@@ -26,6 +26,8 @@ void UV2FuncSwitcher::sendSwitchCommand(std::string func_name,
     std::string json;
     serializeJson(doc, json);
     serial.println(json.c_str());
+
+    sendConfigCommand(func_name, serial);
 }
 
 std::string UV2FuncSwitcher::backSelectedFunc(void) {
@@ -50,4 +52,29 @@ std::string UV2FuncSwitcher::getCurrentFuncName(void) {
 
 bool UV2FuncSwitcher::switchFunc(HardwareSerial &serial) {
     sendSwitchCommand(func_names[func_name_index], serial);
+}
+
+void UV2FuncSwitcher::sendConfigCommand(std::string func_name,
+                                        HardwareSerial &serial) {
+    if (func_name == "Target Tracker") {
+        sendTargetTrackerConfig(func_name, serial);
+    }
+}
+
+void UV2FuncSwitcher::sendTargetTrackerConfig(std::string func_name,
+                                              HardwareSerial &serial) {
+    DynamicJsonDocument doc_conf(200);
+
+    doc_conf["config"] = func_name.c_str();
+
+    // 640x480
+    const uint32_t width = 200;
+    const uint32_t height = 200;
+    doc_conf["x"] = (640 - width) / 2;
+    doc_conf["y"] = (480 - height) / 2;
+    doc_conf["w"] = width;
+    doc_conf["h"] = height;
+    std::string json;
+    serializeJson(doc_conf, json);
+    serial.println(json.c_str());
 }
