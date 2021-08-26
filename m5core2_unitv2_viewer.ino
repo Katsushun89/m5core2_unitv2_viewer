@@ -21,6 +21,7 @@ void setup(void) {
     parse_funcs["Code Detector"] = &parseJsonCodeDetector;
     parse_funcs["Face Detector"] = &parseJsonFaceDetector;
     parse_funcs["Target Tracker"] = &parseJsonTargetTracker;
+    parse_funcs["Object Recognition"] = &parseJsonObjectRecognition;
     /*
         "Lane Line Tracker",
         "Motion Tracker",
@@ -30,7 +31,6 @@ void setup(void) {
         "Color Tracker",
         "Face Recognition",
         "Shape Detector",
-        "Object Recognition"
     */
 
     Serial.begin(115200);
@@ -83,6 +83,7 @@ bool canHandleReceivedJson(std::string rs, std::string &func_name) {
 }
 
 void parseJsonAudioFFT() {}
+
 void parseJsonCodeDetector() {
     int num = doc["num"];                  // 2
     const char *running = doc["running"];  // "Code Detector"
@@ -146,6 +147,7 @@ void parseJsonFaceDetector() {
     }
     uv2drawer.updateScreen();
 }
+
 void parseJsonTargetTracker() {
     const char *running = doc["running"];  // "Face Detector"
 
@@ -164,6 +166,32 @@ void parseJsonTargetTracker() {
     tracker.h = h;
 
     uv2drawer.drawTargetTracker(tracker);
+    uv2drawer.updateScreen();
+}
+
+void parseJsonObjectRecognition() {
+    int num = doc["num"];                  // 2
+    const char *running = doc["running"];  // "Face Detector"
+
+    uv2drawer.clearFullScreen();
+
+    for (JsonObject obj_item : doc["obj"].as<JsonArray>()) {
+        ObjectRecognition recog;
+        double obj_item_prob = obj_item["prob"];  // 0.837566197, 0.634135365
+        int obj_item_x = obj_item["x"];           // 447, -9
+        int obj_item_y = obj_item["y"];           // 77, 254
+        int obj_item_w = obj_item["w"];           // 90, 250
+        int obj_item_h = obj_item["h"];           // 111, 234
+        const char *obj_item_type = obj_item["type"];  // "person", "tvmonitor"
+        recog.x = obj_item_x;
+        recog.y = obj_item_y;
+        recog.w = obj_item_w;
+        recog.h = obj_item_h;
+        recog.prob = obj_item_prob;
+        recog.type = obj_item_type;
+        uv2drawer.drawObjectRecognition(recog);
+    }
+
     uv2drawer.updateScreen();
 }
 

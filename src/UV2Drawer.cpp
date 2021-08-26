@@ -96,6 +96,17 @@ void UV2Drawer::drawTargetTracker(TargetTracker &tracker) {
                      PALETTE_GREEN);
 }
 
+void UV2Drawer::drawObjectRecognition(ObjectRecognition &recog) {
+    canvas->drawRect(convLcdRate(recog.x), convLcdRate(recog.y),
+                     convLcdRate(recog.w), convLcdRate(recog.h), PALETTE_GREEN);
+    canvas->setTextSize(0.5);
+    canvas->setCursor(convLcdRate(recog.x),
+                      convLcdRate(recog.y) - canvas->fontHeight());
+    // canvas->setTextColor(PALETTE_WHITE, PALETTE_GREEN);
+    canvas->setTextColor(PALETTE_GREEN);
+    canvas->printf("%.2f %s", recog.prob, recog.type.c_str());
+}
+
 void UV2Drawer::drawFuncName(std::string func_name, bool is_dediced) {
     canvas->fillScreen(PALETTE_BLACK);
     canvas->setTextSize(1);

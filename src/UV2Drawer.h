@@ -34,6 +34,15 @@ struct TargetTracker {
     float h;
 };
 
+struct ObjectRecognition {
+    float x;
+    float y;
+    float w;
+    float h;
+    float prob;
+    std::string type;
+};
+
 class UV2Drawer {
    private:
     std::queue<std::string> event_queue;
@@ -69,6 +78,7 @@ class UV2Drawer {
     void drawFaceFrame(FaceFrame &face_frame);
     void drawCodeDetector(CodeDetector &code);
     void drawTargetTracker(TargetTracker &tracker);
+    void drawObjectRecognition(ObjectRecognition &recog);
 
     void drawFuncName(std::string func_name, bool is_dediced = false);
     void clearFullScreen();
