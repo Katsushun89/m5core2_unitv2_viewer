@@ -8,9 +8,17 @@ M5UnitV2 outputs the inference results serially.
 This application receives the serial inference results from M5Core2 and draws them on Lcd.
 LovyanGFX is used for drawing.
 
+# How to use
+Connect grove cable(serial) between M5UnitV2 and M5Core2 and turn on M5UnitV2.
+
+
 **Face Detector**
 
 https://user-images.githubusercontent.com/43918797/131156212-3c212416-6382-4472-9b3c-d3ca08a631ba.mp4
+
+Face detection is only supported up to four.
+
+Larger sizes may crash due to memory size overload for Deserialize JSON.
 
 **Object Recognition**
 
